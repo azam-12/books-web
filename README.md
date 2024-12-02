@@ -1,70 +1,113 @@
-# Getting Started with Create React App
+The candidate needs to perform this test with NodeJS + Angular + RDBMS( for database only).
+OR 
+They can use any view engine like Vash or any view engine they have worked on.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+1. HTML Page - Category Master with CRUD operations
+2. HTML Page - Product Master with CRUD operations. A product belongs to a category.
+3. The product list should also display ProductId, ProductName, CategoryName, and CategoryId.
 
-In the project directory, you can run:
+The product list should have pagination on the server side, which means extracting records from DB as per the page size on the view.
+So if the page size is 10 and the user is on page 9 then pull only records from 90 - 100.
+Just so you know - You have to use the RDBMS database only.
 
-### `npm start`
+***************************** XXX *****************************
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- First start the backend server
+- Also check if mysql service is running in task manager only then hit the apis
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Tech Stack Used :
+    - create react app
+    - Tailwindcss
+    - react router dome
+    - @reduxjs/toolkit
+    - react-redux
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Body =>
+    - navbar
+    - home page (category list)
+        - books page (list of books of clicked categories) 
+    - footer
 
-### `npm run build`
+ 
+    
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+const PaginatedRecords = () => {
+  const [data, setData] = useState([]);
+  const [cursors, setCursors] = useState({
+    nextCursor: null,
+    prevCursor: null,
+  });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  const fetchData = async (queryParams) => {
+    try {
+      setLoading(true);
+      const response = await axios.get("http://localhost:8800/category/books/1", {
+        params: queryParams,
+      });
 
-### `npm run eject`
+      const { records, nextCursor, prevCursor } = response.data;
+      setData(records);
+      setCursors({ nextCursor, prevCursor });
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+  useEffect(() => {
+    // Parse query parameters from the current URL
+    const searchParams = new URLSearchParams(location.search);
+    const titleCursor = searchParams.get("titleCursor");
+    const bookIdCursor = searchParams.get("bookIdCursor");
+    const limit = searchParams.get("limit") || 5;
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    // Fetch data based on the current query params
+    fetchData({ titleCursor, bookIdCursor, limit });
+  }, [location.search]);
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+  const handleNext = () => {
+    if (cursors.nextCursor) {
+      // Construct the URL for the next page
+      const nextUrl = `/category/books/1?titleCursor=${encodeURIComponent(cursors.nextCursor.title)}&bookIdCursor=${cursors.nextCursor.id}&limit=5`;
+      navigate(nextUrl); // Update URL for navigation
+    }
+  };
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+  const handlePrev = () => {
+    if (cursors.prevCursor) {
+      // Construct the URL for the previous page
+      const prevUrl = `/category/books/1?titleCursor=${encodeURIComponent(cursors.prevCursor.title)}&bookIdCursor=${cursors.prevCursor.id}&limit=5`;
+      navigate(prevUrl); // Update URL for navigation
+    }
+  };
 
-## Learn More
+  return (
+    <div>
+      <h1>Books</h1>
+      {loading && <p>Loading...</p>}
+      <ul>
+        {data.map((book, index) => (
+          <li key={index}>{book.name}</li> // Replace with your data structure
+        ))}
+      </ul>
+      <button onClick={handlePrev} disabled={!cursors.prevCursor || loading}>
+        Previous
+      </button>
+      <button onClick={handleNext} disabled={!cursors.nextCursor || loading}>
+        Next
+      </button>
+    </div>
+  );
+};
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+export default PaginatedRecords;
