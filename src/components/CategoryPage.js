@@ -11,7 +11,6 @@ const CategoryPage = () => {
     const categories = useSelector((store) => store.categoryMenu);
     const dispatch = useDispatch();
     
-    
     const getCategories = async() => {
         const res = await fetch(BASE_URL);
         const json = await res.json();

@@ -51,7 +51,6 @@ const AddBook = () => {
         Price: price,
         Quantity: quantity,
       });
-      console.log("res", res);
       setShowSuccess(true);
     } catch (err) {
       setError(err.response.data);
